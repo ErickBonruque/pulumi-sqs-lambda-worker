@@ -1,0 +1,26 @@
+# Run the worker image locally: the AWS base image includes the Lambda Runtime
+# Interface Emulator, and moto stands in for S3 and SQS. No AWS account needed.
+#
+#   docker compose up -d --build
+#   uv run python scripts/local_demo.py --limit 5
+#   docker compose down
+services:
+  moto:
+    image: motoserver/moto:5.1.22
+    ports: ["127.0.0.1:5000:5000"]
+
+  worker:
+    build: .
+    ports: ["127.0.0.1:9000:8080"]
+    depends_on: [moto]
+    environment:
+      AWS_ACCESS_KEY_ID: testing
+      AWS_SECRET_ACCESS_KEY: testing
+      AWS_DEFAULT_REGION: us-east-1
+      AWS_ENDPOINT_URL: http://moto:5000
+      AWS_LAMBDA_FUNCTION_TIMEOUT: "30"
+      AWS_LAMBDA_FUNCTION_MEMORY_SIZE: "1024"
+      AWS_LAMBDA_LOG_FORMAT: JSON
+      OUTPUT_BUCKET: thumbnails-local
+      OUTPUT_PREFIX: images/
+      DLQ_URL: http://moto:5000/123456789012/thumbnails-dlq
