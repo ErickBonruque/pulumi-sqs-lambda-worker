@@ -1,0 +1,73 @@
+[project]
+name = "pulumi-sqs-lambda-worker"
+version = "0.1.0"
+description = "SQS -> container Lambda -> S3 worker on AWS, defined with Pulumi in Python. Example job: image thumbnails."
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.11"
+authors = [{ name = "Erick Bonruque" }]
+keywords = ["aws", "pulumi", "lambda", "sqs", "s3", "serverless", "infrastructure-as-code", "pillow", "webp"]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "License :: OSI Approved :: MIT License",
+    "Topic :: System :: Distributed Computing",
+]
+# Runtime dependencies of the Lambda image only. Pulumi lives in the "infra" group.
+dependencies = [
+    "boto3>=1.34",
+    "pillow>=10.4",
+]
+
+[project.scripts]
+thumbnailer = "thumbnailer.cli:main"
+
+[project.urls]
+Source = "https://github.com/ErickBonruque/pulumi-sqs-lambda-worker"
+
+[dependency-groups]
+infra = [
+    "pulumi>=3.150,<4",
+    "pulumi-aws>=7.0,<8",
+    "pulumi-docker-build>=0.0.10",
+]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    "moto[s3,sqs]>=5.0",
+    "ruff>=0.6",
+    "mypy>=1.11",
+    "boto3-stubs[s3,sqs]>=1.34",
+]
+
+[tool.uv]
+default-groups = ["infra", "dev"]
+
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/thumbnailer"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "RUF", "PTH", "S"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101", "S105", "S106"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+files = ["src", "tests"]
+
+[[tool.mypy.overrides]]
+module = ["moto.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
