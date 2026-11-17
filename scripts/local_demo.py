@@ -53,8 +53,14 @@ def main() -> None:
     parser.add_argument("--limit", type=int, default=5)
     args = parser.parse_args()
 
-    s3 = boto3.client("s3", endpoint_url=MOTO, region_name="us-east-1")
-    sqs = boto3.client("sqs", endpoint_url=MOTO, region_name="us-east-1")
+    # moto accepts any credentials; fixed ones keep real AWS credentials out of the demo.
+    session = boto3.Session(
+        aws_access_key_id="testing",
+        aws_secret_access_key="testing",  # noqa: S106 - moto placeholder, not a secret
+        region_name="us-east-1",
+    )
+    s3 = session.client("s3", endpoint_url=MOTO)
+    sqs = session.client("sqs", endpoint_url=MOTO)
     retry(lambda: s3.create_bucket(Bucket=BUCKET))
     dlq_url = sqs.create_queue(QueueName=DLQ)["QueueUrl"]
 
